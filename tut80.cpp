@@ -1,5 +1,10 @@
 #include <iostream>
 using namespace std;
+// class DerivedC: visibility-mode base1, visibility-mode base2
+// {
+//      Class body of class "DerivedC"
+// };
+
 
 class Parent1
 {
