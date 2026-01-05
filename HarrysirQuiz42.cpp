@@ -58,11 +58,10 @@ int main()
 
     // Test Simple
     calc.SetSimple(10, 5);
-    // calc.ProcessSimple();
+
 
     // Test Scientific
     calc.SetSceintific(10, 5);
-    // calc.processScientific();
 
     calc.SimpleCalculator::Display();
     calc.SceintificCalculator::Display();
