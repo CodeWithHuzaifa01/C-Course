@@ -1,132 +1,170 @@
 #include <iostream>
 #include <string>
-
+#include <ctime>
+#include <cmath>
 using namespace std;
 
-// --- Global Variables ---
-// We make the array size 100. This is large enough to feel "dynamic"
-// without actually using complex dynamic memory.
-const int MAX_CARS = 100; 
+struct Car
+{
+    string ownerName;
+    string plateNumber;
+    bool isParked;
+    time_t entryTime;
+};
 
-string parkingSlots[MAX_CARS]; // Array to store license plates
-int totalCars = 0;             // Keeps track of how many cars are currently parked
+const int MAX_CAPACITY = 200;
+Car parkingSlots[MAX_CAPACITY];
+int totalSlots = 0;
 
-// --- Function Prototypes ---
-void parkCar();
-void removeCar();
-void showStatus();
+string getCurrentTime()
+{
+    time_t now = time(0);
+    return ctime(&now);
+}
 
-int main() {
+void parkCar()
+{
+    int foundSlot = -1;
+    for (int i = 0; i < totalSlots; i++)
+    {
+        if (parkingSlots[i].isParked == false)
+        {
+            foundSlot = i;
+            break;
+        }
+    }
+
+    if (foundSlot == -1)
+    {
+        cout << "\n[CRITICAL] PARKING FULL! No slots available.\n";
+        return;
+    }
+
+    cout << "\n=== ENTRY GATE (Slot " << foundSlot + 1 << ") ===\n";
+
+    cin.ignore();
+
+    cout << "Enter Owner Name : ";
+    getline(cin, parkingSlots[foundSlot].ownerName);
+
+    cout << "Enter Plate Number : ";
+    getline(cin, parkingSlots[foundSlot].plateNumber);
+
+    parkingSlots[foundSlot].entryTime = time(0);
+    parkingSlots[foundSlot].isParked = true;
+
+    cout << ">> TICKET ISSUED at: " << ctime(&parkingSlots[foundSlot].entryTime);
+    cout << ">> Car Parked Successfully.\n";
+}
+
+void removeCar()
+{
+    if (totalSlots == 0)
+        return;
+
+    string searchPlate;
+    cout << "\n=== EXIT GATE ===\n";
+
+    cin.ignore();
+    cout << "Enter Plate Number to Checkout: ";
+    getline(cin, searchPlate);
+
+    bool found = false;
+
+    for (int i = 0; i < totalSlots; i++)
+    {
+        if (parkingSlots[i].isParked == true && parkingSlots[i].plateNumber == searchPlate)
+        {
+
+            time_t exitTime = time(0);
+
+            double seconds = difftime(exitTime, parkingSlots[i].entryTime);
+
+            int minutes = seconds / 60;
+
+            if (minutes < 1)
+                minutes = 1;
+
+            int amount = minutes * 10;
+
+            cout << "\n+-----------------------------+\n";
+            cout << "|      OFFICIAL RECEIPT       |\n";
+            cout << "+-----------------------------+\n";
+            cout << "| Name  : " << parkingSlots[i].ownerName << "\n";
+            cout << "| Plate : " << parkingSlots[i].plateNumber << "\n";
+            cout << "| In    : " << ctime(&parkingSlots[i].entryTime);
+            cout << "| Out   : " << ctime(&exitTime);
+            cout << "| Duration   : " << minutes << " Minutes\n";
+            cout << "| BILL  : " << amount << " RS\n";
+            cout << "+-----------------------------+\n";
+
+            parkingSlots[i].isParked = false;
+            parkingSlots[i].ownerName = "";
+            parkingSlots[i].plateNumber = "";
+
+            cout << ">> Payment Received. Slot " << (i + 1) << " is Free.\n";
+            found = true;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        cout << "\n[ERROR] Vehicle with plate '" << searchPlate << "' not found!\n";
+    }
+}
+
+void showStatus()
+{
+    cout << "\n      PARKING LOT OVERVIEW      \n";
+    cout << "___________________________________________________\n";
+
+    for (int i = 0; i < totalSlots; i++)
+    {
+        cout << "| Slot " << (i + 1) << ": ";
+
+        if (parkingSlots[i].isParked)
+        {
+            cout << "[" << parkingSlots[i].plateNumber << "] " << parkingSlots[i].ownerName;
+        }
+        else
+        {
+            cout << "[   EMPTY   ]";
+        }
+        cout << endl;
+    }
+    cout << "|__________________________________________________|\n";
+}
+
+int main()
+{
+    cout << "==========================================\n";
+    cout << "   SMART PARKING SYSTEM (Real-Time)       \n";
+    cout << "==========================================\n";
+
+    cout << "System Setup: How many parking slots? ";
+    cin >> totalSlots;
+
+    if (totalSlots > MAX_CAPACITY)
+        totalSlots = MAX_CAPACITY;
+
     int choice;
-    
-    cout << "========================================" << endl;
-    cout << "   SMART PARKING SYSTEM (Simple)        " << endl;
-    cout << "========================================" << endl;
-
-    // A simple menu loop
-    while (true) {
-        cout << "\n--- Main Menu ---" << endl;
-        cout << "1. Park a Car (Entry)" << endl;
-        cout << "2. Remove a Car (Exit & Bill)" << endl;
-        cout << "3. View Parking Status" << endl;
-        cout << "4. Exit" << endl;
-        cout << "Enter choice: ";
+    while (true)
+    {
+        cout << "\n[1] Park Car   [2] Remove Car   [3] View Slots   [4] Exit\n";
+        cout << "Select Operation: ";
         cin >> choice;
 
-        if (choice == 1) {
+        if (choice == 1)
             parkCar();
-        } else if (choice == 2) {
+        else if (choice == 2)
             removeCar();
-        } else if (choice == 3) {
+        else if (choice == 3)
             showStatus();
-        } else if (choice == 4) {
-            cout << "Exiting program..." << endl;
-            break; // Breaks the loop to stop the program
-        } else {
-            cout << "Invalid choice, try again." << endl;
-        }
+        else if (choice == 4)
+            break;
+        else
+            cout << "Invalid Selection.\n";
     }
-
     return 0;
-}
-
-// --- Function Definitions ---
-
-// 1. Park a Car (Add to Array)
-void parkCar() {
-    // First, check if the lot is full (hit the 100 limit)
-    if (totalCars >= MAX_CARS) {
-        cout << "Sorry, parking is Full!" << endl;
-        return;
-    }
-
-    string plate;
-    cout << "Enter Car License Plate: ";
-    cin >> plate;
-
-    // Store the plate in the next available slot
-    parkingSlots[totalCars] = plate;
-    
-    // Increase the counter
-    totalCars++; 
-
-    cout << "Car parked successfully!" << endl;
-}
-
-// 2. Remove a Car (Delete from Array)
-void removeCar() {
-    if (totalCars == 0) {
-        cout << "Parking lot is empty!" << endl;
-        return;
-    }
-
-    string plate;
-    cout << "Enter License Plate to remove: ";
-    cin >> plate;
-
-    int foundIndex = -1; // -1 means not found yet
-
-    // Step 1: Find the car
-    for (int i = 0; i < totalCars; i++) {
-        if (parkingSlots[i] == plate) {
-            foundIndex = i;
-            break; // Stop looking, we found it
-        }
-    }
-
-    // Step 2: If found, calculate bill and remove
-    if (foundIndex != -1) {
-        int hours;
-        cout << "Car found! How many hours parked? ";
-        cin >> hours;
-
-        int fee = hours * 50; // Simple calculation (50 per hour)
-        cout << "-----------------------" << endl;
-        cout << "Total Bill: " << fee << " Rupees" << endl;
-        cout << "-----------------------" << endl;
-
-        // LOGIC TO REMOVE CAR:
-        // We move the very last car in the list to this empty spot.
-        // This is the easiest way to delete from an array!
-        parkingSlots[foundIndex] = parkingSlots[totalCars - 1];
-        
-        // Decrease the total count
-        totalCars--; 
-
-        cout << "Car removed and payment collected." << endl;
-    } else {
-        cout << "Car not found!" << endl;
-    }
-}
-
-// 3. Show Status (Print Array)
-void showStatus() {
-    cout << "\n--- Current Cars ---" << endl;
-    if (totalCars == 0) {
-        cout << "Parking is Empty." << endl;
-    } else {
-        for (int i = 0; i < totalCars; i++) {
-            cout << "Slot " << (i + 1) << ": " << parkingSlots[i] << endl;
-        }
-    }
 }

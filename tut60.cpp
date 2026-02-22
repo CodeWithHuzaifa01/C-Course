@@ -9,6 +9,7 @@ int main()
     char Fav;
 
     cout << "What is Your Name:-\n" /*name*/ << endl;
+    // cin>>name;
     getline(cin, name);
 
     cout << "What is Your age?" << endl;
