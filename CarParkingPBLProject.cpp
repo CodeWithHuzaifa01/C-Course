@@ -2,6 +2,7 @@
 #include <string>
 #include <ctime>
 #include <cmath>
+#include <limits>
 using namespace std;
 
 struct Car
@@ -16,10 +17,26 @@ const int MAX_CAPACITY = 200;
 Car parkingSlots[MAX_CAPACITY];
 int totalSlots = 0;
 
-string getCurrentTime()
+int getValidInt(const string &prompt)
 {
-    time_t now = time(0);
-    return ctime(&now);
+    int value;
+    while (true)        
+    {
+        cout << prompt;
+        cin >> value;
+
+        if (cin.fail())
+        {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "[ERROR] Invalid input! Please enter a number.\n";
+        }
+        else
+        {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return value;
+        }
+    }
 }
 
 void parkCar()
@@ -42,8 +59,6 @@ void parkCar()
 
     cout << "\n=== ENTRY GATE (Slot " << foundSlot + 1 << ") ===\n";
 
-    cin.ignore();
-
     cout << "Enter Owner Name : ";
     getline(cin, parkingSlots[foundSlot].ownerName);
 
@@ -65,7 +80,6 @@ void removeCar()
     string searchPlate;
     cout << "\n=== EXIT GATE ===\n";
 
-    cin.ignore();
     cout << "Enter Plate Number to Checkout: ";
     getline(cin, searchPlate);
 
@@ -75,11 +89,8 @@ void removeCar()
     {
         if (parkingSlots[i].isParked == true && parkingSlots[i].plateNumber == searchPlate)
         {
-
             time_t exitTime = time(0);
-
             double seconds = difftime(exitTime, parkingSlots[i].entryTime);
-
             int minutes = seconds / 60;
 
             if (minutes < 1)
@@ -142,8 +153,7 @@ int main()
     cout << "   SMART PARKING SYSTEM (Real-Time)       \n";
     cout << "==========================================\n";
 
-    cout << "System Setup: How many parking slots? ";
-    cin >> totalSlots;
+    totalSlots = getValidInt("System Setup: How many parking slots? ");
 
     if (totalSlots > MAX_CAPACITY)
         totalSlots = MAX_CAPACITY;
@@ -152,8 +162,8 @@ int main()
     while (true)
     {
         cout << "\n[1] Park Car   [2] Remove Car   [3] View Slots   [4] Exit\n";
-        cout << "Select Operation: ";
-        cin >> choice;
+
+        choice = getValidInt("Select Operation: ");
 
         if (choice == 1)
             parkCar();
@@ -164,7 +174,8 @@ int main()
         else if (choice == 4)
             break;
         else
-            cout << "Invalid Selection.\n";
+            cout << "[ERROR] Invalid Selection. Please enter 1, 2, 3, or 4.\n";
     }
+
     return 0;
 }
